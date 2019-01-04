@@ -19,6 +19,8 @@ class InlineParser {
     new LineBreakSyntax(),
     new LinkSyntax(),
     new ImageSyntax(),
+    new StrikethroughSyntax(),
+    new LightTextSyntax(),
     // Allow any punctuation to be escaped.
     new EscapeSyntax(),
     // "*" surrounded by spaces is left alone.
@@ -577,6 +579,25 @@ class StrikethroughSyntax extends TagSyntax {
     }
 
     parser.addNode(new Element('del', state.children));
+    return true;
+  }
+}
+
+/// Matches light text syntax according to a spec that I made up.
+class LightTextSyntax extends TagSyntax {
+  LightTextSyntax() : super(r'\^+', requiresDelimiterRun: true);
+
+  @override
+  bool onMatchEnd(InlineParser parser, Match match, TagState state) {
+    var runLength = match.group(0).length;
+    var matchStart = parser.pos;
+    var matchEnd = parser.pos + runLength - 1;
+    var delimiterRun = _DelimiterRun.tryParse(parser, matchStart, matchEnd);
+    if (!delimiterRun.isRightFlanking) {
+      return false;
+    }
+
+    parser.addNode(new Element('light', state.children));
     return true;
   }
 }
